@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Classified Archive</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/9.1.2/vis-timeline-graph2d.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.9/lunr.min.js"></script>
+    <style>
+        #timeline, #map { height: 400px; }
+        #search { padding: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>🔒 Classified Archive</h1>
+    
+    <!-- Search Bar -->
+    <input type="text" id="search" placeholder="Search documents...">
+    <div id="search-results"></div>
+
+    <!-- Timeline -->
+    <h2>Document Release Timeline</h2>
+    <div id="timeline"></div>
+
+    <!-- Map -->
+    <h2>Abandoned Places Map</h2>
+    <div id="map"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/9.1.2/vis-timeline-graph2d.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Load data
+        fetch('data.json')
+            .then(r => r.json())
+            .then(data => {
+                initSearch(data);
+                initTimeline(data.declassified_docs);
+                initMap(data.abandoned_places);
+            });
+
+        function initSearch(data) {
+            const idx = lunr(function() {
+                this.ref('id');
+                this.field('title');
+                this.field('text_preview');
+                data.declassified_docs.forEach((doc, i) => {
+                    this.add({ id: i, ...doc });
+                });
+            });
+
+            document.getElementById('search').addEventListener('input', (e) => {
+                const results = idx.search(e.target.value);
+                document.getElementById('search-results').innerHTML = results
+                    .map(r => `<div><h3>${data.declassified_docs[r.ref].title}</h3></div>`)
+                    .join('');
+            });
+        }
+    </script>
+</body>
+</html>
